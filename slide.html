@@ -9,9 +9,44 @@
 wass80
 ## 自己紹介
 + wass80
-+ 情報学科
++ 情報学科新4回生
 ## ななち
 ななち
+## LTのネタがない!
+昨日に春合宿行きが決定した。
+## スライドを作る環境もない
+## ネットもない
+## このマシンはほぼ未設定
+マシンを修理に出していた。
+## 詰んだ。
+／(^o^)＼
+## 手元にあるのは
++ Chrome
++ 初期設定のVS code
+## Chromeがある
++ なんでもできる
++ 春合宿は車輪の再実装の機会!
+## Chromeでスライドを作る
++ Markdownを書くとスライドに変換される。
++ reveal.jsみたいなやつ。
+## コーディングの制約
++ ChromeとVS Codeだけでプログラミング。
++ VS CodeにViキーバインド内のつらすぎる…
++ MDNは見た(許して)
+## 仕様
++ 手抜きMarkdownをスライドにする。
++ h1, h2, p, ul, img だけ。
+## 実装
++ 3時間かかった。
+## 実装の様子
+<script>タグの中に書く
+![./source.png()
+## テスト駆動
+JSでObjectの等価性判定めんどい…
+![./tests.png]()
+## 動きもつける
+![./cont.png]()
+
 </script>
 
 <script>
@@ -115,10 +150,10 @@ const textsdom = (texts) => {
         case "str":
             return text.text;
         case "img":
-            return `<img src="${src}" alt="${alt}">`;
+            return `<img src="${text.src}" alt="${text.alt}">`;
         default: console.error("Unreachable");
         }
-    });
+    }).join("");
 };
 
 const linedom = (line) => {
@@ -195,6 +230,8 @@ assertEq(paging([ast1("h1", "A"), ast1("list", "hoge"),
            ast1("p", "piyo")]]
         );
 
+assertEq(textsdom([astimg("src", "alt")]),
+         `<img src="src" alt="alt">`);
 
 const sourceDom =  document.getElementById("source");
 const source = sourceDom.innerHTML;
@@ -288,10 +325,10 @@ h2 {
     font-size: 64px;
 }
 p {
-    font-size: 24px;
+    font-size: 48px;
 }
 li {
-    font-size: 24px;
+    font-size: 48px;
 }
 </style>
 </body>
