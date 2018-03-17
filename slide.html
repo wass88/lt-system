@@ -204,5 +204,94 @@ console.log(parse(source));
 
 const main = document.getElementById("main");
 main.appendChild(makeSlide(source));
+
+
+//// Controll
+let now = 0;
+let pages = Array.from(main.querySelectorAll(".page"));
+const prev = () => {
+    if (now <= 0) return;
+    pages[now].classList.add("none");
+    pages[now - 1].classList.remove("none");
+    pages[now - 1].style.display = "block";
+    now -= 1;
+};
+const next = () => {
+    if (now >= pages.length - 1) return;
+    //pages[now].classList.add("none");
+    pages[now + 1].classList.remove("none");
+    now += 1;
+};
+const init = () => {
+    pages.forEach((p, i) => {
+        if (now === i) {
+            p.classList.remove("none");
+        } else {
+            p.classList.add("none");
+        }
+    });
+};
+pages.forEach((p) => {
+    p.addEventListener("transitionend", (e) => {
+        if (p.classList.contains("none")) {
+        }
+    });
+});
+document.body.addEventListener("keydown", (e) => {
+    switch (e.code) {
+    case "ArrowRight":
+        next();
+        break;
+    case "ArrowLeft":
+        prev();
+        break;
+    }
+});
+
+console.log(pages);
+init();
 </script>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+#main {
+
+}
+.slide {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+.page {
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    border: 1px black solid;
+    background: #ddd;
+    padding: 32px;
+    transition: 0.5s top;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.page.none {
+    top: -100vh;
+}
+h1 {
+    font-size: 96px;
+}
+h2 {
+    font-size: 64px;
+}
+p {
+    font-size: 24px;
+}
+li {
+    font-size: 24px;
+}
+</style>
 </body>
