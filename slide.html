@@ -3,28 +3,29 @@
 <body>
 <div id="main">
 </div>
-</body>
 
 <script id="source" type="text/application">
-#これはテスト
+# LTスライドをMarkdownで作る話
+wass80
+## 自己紹介
++ wass80
++ 情報学科
+## ななち
+ななち
 </script>
 
 <script>
-/*
-# Top title   -> { tag: "h1", text: "Top title"}
-## Slide title -> { tag: "h2", text: "Slide title"}
-+ List..   -> { tag: "list", text: "List"}
-+ List..   ->
-
-![x](y) { tag: "img", src: "x", alt: "y" }
-
-
-
-*/
 
 const equalObj = (a, b) => {
     for (const p in b) {
-        if (a[p] !== b[p]) return  false;
+        if (!a[p]) return false;
+    }
+    for (const p in a) {
+        if (typeof a[p] === "object") {
+            if (!equalObj(a[p], b[p])) return false;
+        } else if (a[p] !== b[p]) {
+            return false;
+        }
     }
     return true;
 };
@@ -34,32 +35,174 @@ const assertEq = (a, b) => {
         console.info("Asserted");
         return;
     }
-    console.error("Assert Failed", a, b);
+    console.error("Assert Failed", a, b, JSON.stringify(a), JSON.stringify(b));
 }
+
+const aststr = (text) => ({tag: "str", text});
+const astimg = (src, alt) => ({tag: "img", src, alt});
+
+const parseText = (str) => {
+    let s = str;
+    const res = [];
+    while(s !== "") {
+        let m = s.match(/!\[(.*)\]\((.*)\)/);
+        if (m) {
+            res.push(aststr(str.substr(0, m.index)));
+            res.push(astimg(m[1], m[2]));
+            s = str.substr(m.index + m[0].length);
+        } else {
+            res.push(aststr(s));
+            s = "";
+        }
+    }
+    return res;
+}
+
+const ast1 = (tag, text) => ({ tag, text });
 
 const parseLine = (line) => {
     let m;
     if (m = line.match(/\s*##\s*(.+)/)) {
-        return { tag: "h2", text: m[1] };
+        return ast1("h2", parseText(m[1]));
     }
     if (m = line.match(/\s*#\s*(.+)/)) {
-        return { tag: "h1", text: m[1] };
+        return ast1("h1", parseText(m[1]));
     }
-    if (m = line.match(/\s*+\s*(.+)/)) {
-        return { tag: "li", text: m[1] };
+    if (m = line.match(/\s*\+\s*(.+)/)) {
+        return ast1("list", parseText(m[1]));
     }
-    return { tag: "p", text: line };
+    return ast1("p", parseText(line));
+};
+
+const paging = (lines) => {
+    const res = [];
+    let page = [];
+    let list = [];
+    lines.forEach((l) => {
+        if (l.tag !== "list" && list.length !== 0) {
+            page.push(ast1("ul", list));
+            list = [];
+        }
+        switch (l.tag) {
+        case "h1":
+            res.push(page);
+            page = [l];
+            break;    
+        case "h2":
+            res.push(page);
+            page = [l];
+            break;
+        case "list":
+            list.push(l.text);
+            break;
+        case "p":
+            page.push(l);
+            break;
+        default: console.error("Unreachable");
+        }
+    });
+    res.push(page);
+    return res.slice(1);
 };
 
 const parse = (src) => {
-    
+    return paging(src.split("\n").map((l) => parseLine(l)));
 };
 
-assertEq(parseLine(" ## Test"), { tag: "h2", text: "Test"});
+const textsdom = (texts) => {
+    return texts.map((text) => {
+        switch (text.tag) {
+        case "str":
+            return text.text;
+        case "img":
+            return `<img src="${src}" alt="${alt}">`;
+        default: console.error("Unreachable");
+        }
+    });
+};
+
+const linedom = (line) => {
+    let res;
+    switch(line.tag) {
+    case "h1":
+        res = document.createElement("h1");
+        res.innerHTML = textsdom(line.text);
+        return res;
+    case "h2":
+        res = document.createElement("h2");
+        res.innerHTML = textsdom(line.text);
+        return res;
+    case "p":
+        res = document.createElement("p");
+        res.innerHTML = textsdom(line.text);
+        return res;
+    case "ul":
+        res = document.createElement("ul");
+        line.text.forEach((t) => {
+            const li = document.createElement("li");
+            li.innerHTML = textsdom(t);
+            res.appendChild(li);
+        });
+        return res;
+    default: console.log("Unreachable");
+    }
+};
+
+const pagedom = (page) => {
+    const res = document.createElement("div");
+    res.classList.add("page");
+    page.map((l) => linedom(l)).forEach((d) => {
+        res.appendChild(d);
+    });
+    return res;
+};
+
+const slidedom = (pages) => {
+    const res = document.createElement("div");
+    res.classList.add("slide");
+    pages.map((page) => {
+        const paged = pagedom(page);
+        res.appendChild(paged);
+    });
+    return res;
+}
+
+const makeSlide = (src) => slidedom(parse(src));
+
+// TESTs
+assertEq([1], [1]);
+assertEq({a:2, b:1}, {b:1, a:2});
+assertEq([[1]], [[1]]);
+
+assertEq(parseText("hoge"), [aststr("hoge")]);
+assertEq(parseText("hoge ![./src](alt) piyo"),
+         [aststr("hoge "), astimg("./src", "alt"), aststr(" piyo")]);
+
+assertEq(parseLine(" + Test"), ast1("list", [aststr("Test")]));
+assertEq(parseLine("#Test"), ast1("h1", [aststr("Test")]));
+assertEq(parseLine(" ## Test"), ast1("h2", [aststr("Test")]));
+
+assertEq(paging([ast1("h1", "A"), ast1("p", "hoge"),
+                 ast1("h2", "B"), ast1("p", "piyo")]),
+         [[ast1("h1", "A"), ast1("p", "hoge")],
+          [ast1("h2", "B"), ast1("p", "piyo")]]
+        );
+assertEq(paging([ast1("h1", "A"), ast1("list", "hoge"),
+                 ast1("h2", "B"), ast1("list", "piyo1"),
+                 ast1("list", "piyo2"), ast1("p", "piyo")]),
+         [[ast1("h1", "A"), ast1("ul", ["hoge"])],
+          [ast1("h2", "B"), ast1("ul",  ["piyo1", "piyo2"]),
+           ast1("p", "piyo")]]
+        );
 
 
 const sourceDom =  document.getElementById("source");
 const source = sourceDom.innerHTML;
 
 console.log(source);
+console.log(parse(source));
+
+const main = document.getElementById("main");
+main.appendChild(makeSlide(source));
 </script>
+</body>
