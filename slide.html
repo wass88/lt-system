@@ -10,6 +10,54 @@
 </script>
 
 <script>
+/*
+# Top title   -> { tag: "h1", text: "Top title"}
+## Slide title -> { tag: "h2", text: "Slide title"}
++ List..   -> { tag: "list", text: "List"}
++ List..   ->
+
+![x](y) { tag: "img", src: "x", alt: "y" }
+
+
+
+*/
+
+const equalObj = (a, b) => {
+    for (const p in b) {
+        if (a[p] !== b[p]) return  false;
+    }
+    return true;
+};
+
+const assertEq = (a, b) => {
+    if (equalObj(a, b)) {
+        console.info("Asserted");
+        return;
+    }
+    console.error("Assert Failed", a, b);
+}
+
+const parseLine = (line) => {
+    let m;
+    if (m = line.match(/\s*##\s*(.+)/)) {
+        return { tag: "h2", text: m[1] };
+    }
+    if (m = line.match(/\s*#\s*(.+)/)) {
+        return { tag: "h1", text: m[1] };
+    }
+    if (m = line.match(/\s*+\s*(.+)/)) {
+        return { tag: "li", text: m[1] };
+    }
+    return { tag: "p", text: line };
+};
+
+const parse = (src) => {
+    
+};
+
+assertEq(parseLine(" ## Test"), { tag: "h2", text: "Test"});
+
+
 const sourceDom =  document.getElementById("source");
 const source = sourceDom.innerHTML;
 
