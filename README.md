@@ -1,6 +1,8 @@
 # lt-system
 ネットのない環境で3時間で作ったMarkdownスライドシステム
 
+[DEMO](https://wass88.github.io/lt-system/slide.html)
+
 ## usage
 
 必要なものはslide.htmlだけです。
